@@ -95,6 +95,7 @@
         let boat = [];
         let boatOnLeft = true;
         let failsafeCounter = 0;
+        let failsafeType = "Null"
 
         function moveItem(item) {
             let bank = boatOnLeft ? leftBank : rightBank;
@@ -139,26 +140,33 @@
                 const hasPositive = bank.includes("positive");
                 const hasNeutral = bank.includes("neutral");
                 const hasGround = bank.includes("ground");
+                if(hasPositive && hasNeutral && !hasGround){ //Ungrounded
+                    state.failsafeType = "UNGROUND CIRCUIT"
+                }
+                else{ 
+                    state.failsafeType = "CIRCUIT UNDERCURRENT"
                 return (hasPositive && hasNeutral && !hasGround) || (hasNeutral && hasGround && !hasPositive);
+                
             }
             if (aloneTogether(leftBank) && !boatOnLeft) {
-                triggerFailsafe();
+                triggerFailsafe(state.failsafeType);
                 return;
             }
             if (aloneTogether(rightBank) && boatOnLeft) {
-                triggerFailsafe();
+                triggerFailsafe(state.failsafeType);
                 return;
             }
             document.getElementById("message").innerText = "";
         }
 
-        function triggerFailsafe() {
+        function triggerFailsafe(type) {
             failsafeCounter++;
             document.getElementById("failsafe-counter").innerText = failsafeCounter;
             if (failsafeCounter > 2) {
                 document.getElementById("message").innerText = "TAMPERING DETECTED ALARM TRIGGERED";
-            } else {
-                document.getElementById("message").innerText = "WARNING FAILSAFE TRIGGERED";
+            }
+            else {
+                document.getElementById("message").innerText = `WARNING FAILSAFE TRIGGERED: ${type}`;
             }
         }
 

@@ -1,0 +1,57 @@
+body {
+    font-family: Arial, sans-serif;
+    text-align: center;
+    background-color: #f0f0f0;
+}
+
+#game {
+    display: inline-block;
+    margin-top: 50px;
+}
+
+#status {
+    margin-bottom: 20px;
+}
+
+.side-screen {
+    display: none;
+    margin-bottom: 20px;
+}
+
+.side-screen.active {
+    display: block;
+}
+
+.wires {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.wire {
+    margin: 5px 0;
+    padding: 10px;
+    border: 1px solid #000;
+    width: 80%;
+    cursor: pointer;
+    background-color: #ddd;
+}
+
+#controls {
+    display: flex;
+    justify-content: center;
+}
+
+button {
+    margin: 0 10px;
+    padding: 10px 20px;
+    cursor: pointer;
+}
+
+.wire.held {
+    background-color: red;
+}
+
+.hidden {
+    display: none;
+}

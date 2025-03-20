@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Manual Override</title>
+    <style>
+        body {
+            font-family: "Courier New", Courier, monospace;
+            text-align: center;
+            background-color: #222;
+            color: #0f0;
+        }
+        h1 {
+            color: #0f0;
+        }
+        .riverbank {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+        }
+        .bank {
+            border: 2px solid #0f0;
+            padding: 20px;
+            min-width: 200px;
+            min-height: 150px;
+            background-color: #111;
+        }
+        .bank.active {
+            background-color: #070;
+        }
+        .bank.inactive {
+            background-color: #700;
+        }
+        .item {
+            margin: 5px;
+            padding: 5px;
+            background-color: #333;
+            cursor: pointer;
+            display: inline-block;
+            border: 1px solid #0f0;
+        }
+        .boat {
+            border: 2px solid #0f0;
+            padding: 20px;
+            margin-top: 20px;
+            cursor: pointer;
+            min-width: 100px;
+            min-height: 50px;
+            background-color: #444;
+            color: #0f0;
+        }
+        #controls {
+            margin-top: 20px;
+        }
+        .button {
+            margin: 5px;
+            padding: 10px 20px;
+            cursor: pointer;
+            background-color: #0f0;
+            color: #222;
+            border: none;
+            border-radius: 5px;
+        }
+        #message {
+            margin-top: 20px;
+            font-size: 1.2em;
+            color: #f00;
+        }
+    </style>
+</head>
+<body>
+    <h1>Wire Transfer Puzzle</h1>
+    <div class="riverbank">
+        <div id="left-bank" class="bank active">
+            <h3>OPERATING CIRCUIT</h3>
+            <div id="positive" class="item" onclick="moveItem('positive')">Positive (+)</div>
+            <div id="neutral" class="item" onclick="moveItem('neutral')">Neutral (-)</div>
+            <div id="ground" class="item" onclick="moveItem('ground')">Ground (x)</div>
+        </div>
+        <div>
+            <div id="boat" class="boat" onclick="moveBoat()">Held Wire (Click to change sides)</div>
+        </div>
+        <div id="right-bank" class="bank inactive">
+            <h3>INVERTED CIRCUIT</h3>
+        </div>
+    </div>
+    <div id="controls">
+        <button class="button" onclick="resetGame()">Reset</button>
+        <p>Failsafes Triggered: <span id="failsafe-counter">0</span></p>
+    </div>
+    <p id="message"></p>
+
+    <script>
+        let leftBank = ["positive", "neutral", "ground"];
+        let rightBank = [];
+        let boat = [];
+        let boatOnLeft = true;
+        let failsafeCounter = 0;
+
+        function moveItem(item) {
+            let bank = boatOnLeft ? leftBank : rightBank;
+            let index = bank.indexOf(item);
+            if (index !== -1) {
+                if (boat.length < 1) {
+                    boat.push(item);
+                    bank.splice(index, 1);
+                } else {
+                    let swapItem = boat[0];
+                    boat[0] = item;
+                    bank.push(swapItem);
+                    bank.splice(bank.indexOf(item), 1);
+                }
+            } else if (boat.includes(item)) {
+                boat.splice(boat.indexOf(item), 1);
+                if (boatOnLeft) {
+                    leftBank.push(item);
+                } else {
+                    rightBank.push(item);
+                }
+            }
+            updateUI();
+        }
+
+        function moveBoat() {
+            boatOnLeft = !boatOnLeft;
+            document.getElementById("left-bank").classList.toggle("active", boatOnLeft);
+            document.getElementById("left-bank").classList.toggle("inactive", !boatOnLeft);
+            document.getElementById("right-bank").classList.toggle("active", !boatOnLeft);
+            document.getElementById("right-bank").classList.toggle("inactive", boatOnLeft);
+            checkGameState();
+            updateUI();
+        }
+
+        function checkGameState() {
+            if (rightBank.length === 3) {
+                glitchOut();
+                return;
+            }
+            const aloneTogether = (bank) => {
+                const hasPositive = bank.includes("positive");
+                const hasNeutral = bank.includes("neutral");
+                const hasGround = bank.includes("ground");
+                return (hasPositive && hasNeutral && !hasGround) || (hasNeutral && hasGround && !hasPositive);
+            }
+            if (aloneTogether(leftBank) && !boatOnLeft) {
+                triggerFailsafe();
+                return;
+            }
+            if (aloneTogether(rightBank) && boatOnLeft) {
+                triggerFailsafe();
+                return;
+            }
+            document.getElementById("message").innerText = "";
+        }
+
+        function triggerFailsafe() {
+            failsafeCounter++;
+            document.getElementById("failsafe-counter").innerText = failsafeCounter;
+            if (failsafeCounter > 2) {
+                document.getElementById("message").innerText = "TAMPERING DETECTED ALARM TRIGGERED";
+            } else {
+                document.getElementById("message").innerText = "Game Over: A failsafe was triggered!";
+            }
+        }
+
+        function resetGame() {
+            leftBank = ["positive", "neutral", "ground"];
+            rightBank = [];
+            boat = [];
+            boatOnLeft = true;
+            document.getElementById("message").innerText = "";
+            document.getElementById("left-bank").classList.add("active");
+            document.getElementById("left-bank").classList.remove("inactive");
+            document.getElementById("right-bank").classList.add("inactive");
+            document.getElementById("right-bank").classList.remove("active");
+            updateUI();
+        }
+
+        function updateUI() {
+            document.getElementById("left-bank").innerHTML = "<h3>OPERATING CIRCUIT</h3>" + leftBank.map(item => `<div class='item' onclick='moveItem("${item}")'>${getIcon(item)} ${item}</div>`).join('');
+            document.getElementById("right-bank").innerHTML = "<h3>INVERTED CIRCUIT</h3>" + rightBank.map(item => `<div class='item' onclick='moveItem("${item}")'>${getIcon(item)} ${item}</div>`).join('');
+            document.getElementById("boat").innerHTML = `Held Wire (Click to change sides) ${boat.map(item => `<div class='item' onclick='moveItem("${item}")'>${getIcon(item)} ${item}</div>`).join('')}`;
+        }
+
+        function getIcon(item) {
+            return item === "positive" ? "🔴" : item === "neutral" ? "⚪" : "🟢";
+        }
+
+        function glitchOut() {
+            const colors = ["red", "green", "blue", "yellow", "purple"];
+            let i = 0;
+            const interval = setInterval(() => {
+                document.body.style.backgroundColor = colors[i % colors.length];
+                document.body.style.color = colors[(i + 1) % colors.length];
+                i++;
+            }, 100);
+
+            setTimeout(() => {
+                clearInterval(interval);
+                document.body.style.backgroundColor = "black";
+                document.body.style.color = "black";
+                document.body.innerHTML = "";
+            }, 3000);
+        }
+
+        updateUI();
+    </script>
+</body>
+</html>

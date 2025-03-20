@@ -68,7 +68,7 @@
     </style>
 </head>
 <body>
-    <h1>CAUTION HIGH VOLTAGE   </h1>
+    <h1>CAUTION HIGH VOLTAGE</h1>
     <div class="riverbank">
         <div id="left-bank" class="bank active">
             <h3>OPERATING CIRCUIT</h3>
@@ -95,7 +95,7 @@
         let boat = [];
         let boatOnLeft = true;
         let failsafeCounter = 0;
-        let failsafeType = "Null"
+        let failsafeType = "Null";
 
         function moveItem(item) {
             let bank = boatOnLeft ? leftBank : rightBank;
@@ -140,20 +140,19 @@
                 const hasPositive = bank.includes("positive");
                 const hasNeutral = bank.includes("neutral");
                 const hasGround = bank.includes("ground");
-                if(hasPositive && hasNeutral && !hasGround){ //Ungrounded
-                    state.failsafeType = "UNGROUND CIRCUIT"
+                if (hasPositive && hasNeutral && !hasGround) { // Ungrounded
+                    failsafeType = "UNGROUNDED CIRCUIT";
+                } else if (hasNeutral && hasGround && !hasPositive) { // Undercurrent
+                    failsafeType = "CIRCUIT UNDERCURRENT";
                 }
-                else{ 
-                    state.failsafeType = "CIRCUIT UNDERCURRENT"
                 return (hasPositive && hasNeutral && !hasGround) || (hasNeutral && hasGround && !hasPositive);
-                
             }
             if (aloneTogether(leftBank) && !boatOnLeft) {
-                triggerFailsafe(state.failsafeType);
+                triggerFailsafe(failsafeType);
                 return;
             }
             if (aloneTogether(rightBank) && boatOnLeft) {
-                triggerFailsafe(state.failsafeType);
+                triggerFailsafe(failsafeType);
                 return;
             }
             document.getElementById("message").innerText = "";
@@ -164,8 +163,7 @@
             document.getElementById("failsafe-counter").innerText = failsafeCounter;
             if (failsafeCounter > 2) {
                 document.getElementById("message").innerText = "TAMPERING DETECTED ALARM TRIGGERED";
-            }
-            else {
+            } else {
                 document.getElementById("message").innerText = `WARNING FAILSAFE TRIGGERED: ${type}`;
             }
         }
